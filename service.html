@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تحديد موقع الاستلام</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Tajawal', sans-serif;
+      background: #ffffff;
+      color: #333;
+    }
+    .text {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      font-size: 18px;
+      font-weight: bold;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+    }
+    .back-arrow { font-size: 20px;
+       margin-right: 15px; 
+       cursor: pointer; 
+       color: #000000;
+        text-decoration: none;
+       }
+    .map-container {
+      max-width: 600px;
+      margin: 20px auto;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      height: 300px;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    .address-section {
+      max-width: 600px;
+      margin: 15px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5px;
+    }
+    .address-label {
+      font-weight: bold;
+      font-size: 16px;
+      color: #333;
+    }
+    .address-box {
+      max-width: 600px;
+      margin: 10px auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .address-box h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .address-details {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #555;
+    }
+    .confirm-btn {
+      display: block;
+      width: 90%;
+      max-width: 600px;
+      margin: 25px auto;
+      padding: 14px;
+      text-align: center;
+      background: #5b8a5f;
+      color: white;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: 0.2s;
+    }
+    .confirm-btn:hover {
+      background: #4a7450;
+    }
+  </style>
+</head>
+<body>
+<div class="page-header"> <a href="home.html" class="back-arrow"><</a> </div>
+  <div class="text">تحديد موقع الإستلام</div>
+
+  <div class="map-container">
+    <div id="map"></div>
+  </div>
+
+  <div class="address-section">
+    <span class="address-label">العنوان</span>
+  </div>
+
+  <div class="address-box">
+    <h3>الموقع المحدد</h3>
+    <div class="address-details">
+      <span id="coords"><strong>الإحداثيات:</strong> لم يتم التحديد</span>
+      <span id="address"><strong>العنوان:</strong> ---</span>
+    </div>
+  </div>
+
+  <button class="confirm-btn">تأكيد الطلب</button>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    var map = L.map('map').setView([21.3891, 39.8579], 12); // مكة
+
+    // طبقة الخريطة
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marker;
+
+    // عند الضغط على الخريطة
+    map.on('click', function(e) {
+      var lat = e.latlng.lat.toFixed(5);
+      var lng = e.latlng.lng.toFixed(5);
+
+      // إزالة العلامة القديمة
+      if (marker) {
+        map.removeLayer(marker);
+      }
+
+      // إضافة العلامة الجديدة
+      marker = L.marker([lat, lng]).addTo(map)
+        .bindPopup("الموقع المحدد").openPopup();
+
+      // تحديث الإحداثيات
+      document.getElementById("coords").innerHTML = "<strong>الإحداثيات:</strong> " + lat + ", " + lng;
+
+      // جلب العنوان من Nominatim API
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=ar`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("address").innerHTML = "<strong>العنوان:</strong> " + (data.display_name || "غير متاح");
+        })
+        .catch(() => {
+          document.getElementById("address").innerHTML = "<strong>العنوان:</strong> غير متاح";
+        });
+    });
+  </script>
+</body>
+</html>
